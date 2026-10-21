@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Reading } from '../types'
+import { usesHour12 } from './clock'
 import {
   BAR_WIDTH,
   SEPARATOR,
@@ -16,6 +17,7 @@ import type { LimitView, Tone } from './limits'
 const reading = atom({ plugin: 'usage-viewer', key: 'reading' } as const, null)
 const isFresh = atom({ plugin: 'usage-viewer', key: 'isFresh' } as const, false)
 const now = atom({ plugin: 'usage-viewer', key: 'now' } as const, 0)
+const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 
 const STORE_KEY = 'lastReading'
 const TICK_MS = 60_000
@@ -26,12 +28,25 @@ const TONE_COLORS: Record<Tone, string | undefined> = {
   error: 'error',
 }
 
-function prefersHour12(): boolean {
+/** One of the Mac's global preferences, or undefined where it is unset or unreadable. */
+async function readDefault($: EngineInterface, key: string): Promise<string | undefined> {
   try {
-    return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hour12 ?? true
+    const { exitCode, stdout } = await $.process.run(['/usr/bin/defaults', 'read', '-g', key])
+
+    return exitCode === 0 ? stdout.trim() : undefined
   } catch {
-    return true
+    return undefined
   }
+}
+
+async function readHour12($: EngineInterface): Promise<boolean> {
+  const [force24, force12, locale] = await Promise.all([
+    readDefault($, 'AppleICUForce24HourTime'),
+    readDefault($, 'AppleICUForce12HourTime'),
+    readDefault($, 'AppleLocale'),
+  ])
+
+  return usesHour12({ force24: force24 === '1', force12: force12 === '1', locale })
 }
 
 async function keep($: EngineInterface, fresh: Reading) {
@@ -41,11 +56,12 @@ async function keep($: EngineInterface, fresh: Reading) {
 }
 
 export const register: Register = on => {
-  const hour12 = prefersHour12()
-
   on('session.start', async ($, e, next) => {
     const started = await $.clock.now()
     await update($, now, () => started)
+
+    const isHour12 = await readHour12($)
+    await update($, hour12, () => isHour12)
 
     const current = toReading((await $.session.usage()).rateLimits, started)
     if (current !== null) {
@@ -78,7 +94,7 @@ export const register: Register = on => {
 
     const fresh = await read($, isFresh)
     const at = (await read($, now)) || shown.takenAt
-    const views = viewLimits(shown, { now: at, isFresh: fresh, hour12 })
+    const views = viewLimits(shown, { now: at, isFresh: fresh, hour12: await read($, hour12) })
     const ageText = fresh ? undefined : formatAge(shown.takenAt, at)
 
     const { Box, Text } = $.ui.resolve(e)

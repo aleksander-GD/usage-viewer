@@ -18,6 +18,7 @@ declare module 'claude-code' {
       reading: Reading | null
       isFresh: boolean
       now: number
+      hour12: boolean
     }
   }
 }
