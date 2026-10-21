@@ -1,3 +1,5 @@
+import type { SessionRateLimit } from 'claude-code'
+
 import type { Limit, LimitKind, Reading } from '../types'
 import { DAY, HOUR, MINUTE } from './time'
 
@@ -36,7 +38,7 @@ export const BAR_WIDTH = 10
  * a Reading always covers every limit seen so far.
  */
 export function toReading(
-  rateLimits: { kind: string; percentUsed: number; resetsAt?: string }[],
+  rateLimits: readonly SessionRateLimit[],
   takenAt: number,
   previous: Reading | null = null,
 ): Reading | null {
