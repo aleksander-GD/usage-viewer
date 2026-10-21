@@ -141,7 +141,7 @@ export function viewLimits(
   })
 }
 
-/** Cells one limit takes: "Session limit ▰▱▱▱▱▱▱▱▱▱ 4% · in 3 hr 16 min (7:00 PM)". */
+/** Cells one limit takes: "Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)". */
 export function limitWidth(view: LimitView): number {
   const reset = view.resetText === undefined ? 0 : ` · ${view.resetText}`.length
 

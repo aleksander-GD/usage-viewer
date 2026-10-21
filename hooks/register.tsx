@@ -109,8 +109,8 @@ export const register: Register = on => {
       return (
         <Text dimColor={view.isDim}>
           {view.label}{' '}
-          <Text color={color}>{'▰'.repeat(filled)}</Text>
-          <Text color="subtle">{'▱'.repeat(BAR_WIDTH - filled)}</Text>
+          <Text mono color={color}>{'━'.repeat(filled)}</Text>
+          <Text mono color="subtle">{'─'.repeat(BAR_WIDTH - filled)}</Text>
           <Text tabular color={view.isDim ? undefined : TONE_COLORS[view.tone]}>
             {' '}
             {view.percent}%
