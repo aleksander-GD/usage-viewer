@@ -133,10 +133,12 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {views.map(view => (
-          <Text wrap="truncate">{limit(view)}</Text>
+        {views.map((view, index) => (
+          <Text wrap="truncate">
+            {limit(view)}
+            {index === views.length - 1 && ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+          </Text>
         ))}
-        {ageText !== undefined && <Text dimColor wrap="truncate">{ageText}</Text>}
       </Box>
     )
   })

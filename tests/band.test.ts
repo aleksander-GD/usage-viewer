@@ -89,6 +89,24 @@ describe('Limit band', () => {
     await ui.unmount()
   })
 
+  test('keeps a narrow Stale reading to two rows, the age on the last', async ($, on) => {
+    world(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
+    await $.session.start(START)
+
+    for (const surface of SURFACES) {
+      const ui = await $.ui.mount({
+        plugin: 'usage-viewer',
+        surface,
+        component: 'AbovePrompt',
+        props: props({ bodyColumns: 60 }),
+      })
+      const tree = await ui.drawn()
+      expect('children' in tree ? tree.children : []).toHaveLength(2)
+      expect(await ui.find({ type: 'Text', text: /Weekly · all models.*as of 14 min ago/ })).toBeDefined()
+      await ui.unmount()
+    }
+  })
+
   test('uses two rows when the band is narrow', async ($, on) => {
     world(on, { current: LIMITS })
     await $.session.start(START)
