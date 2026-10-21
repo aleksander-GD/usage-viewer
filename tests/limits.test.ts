@@ -119,9 +119,12 @@ describe('stale reading age', () => {
 })
 
 describe('layout', () => {
-  test('the bar fills in proportion and stays within its width', async () => {
-    expect(filledCells(4)).toBe(0)
+  test('the bar fills in proportion, showing any use and full only at the limit', async () => {
+    expect(filledCells(0)).toBe(0)
+    expect(filledCells(1)).toBe(1)
+    expect(filledCells(4)).toBe(1)
     expect(filledCells(38)).toBe(4)
+    expect(filledCells(99)).toBe(9)
     expect(filledCells(100)).toBe(10)
     expect(filledCells(140)).toBe(10)
   })

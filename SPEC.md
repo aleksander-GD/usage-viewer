@@ -20,7 +20,8 @@ Model-specific weekly limits are **out of scope** for v1.
 ## Layout
 
 - One row, both limits side by side:
-  `Session limit ▰▰▱▱▱ 4% · in 3 hr 16 min (7:00 PM) │ Weekly · all models ▰▰▰▱▱ 38% · Wed 7:00 PM`
+  `Session limit ▰▱▱▱▱▱▱▱▱▱ 4% · in 3 hr 16 min (7:00 PM) │ Weekly · all models ▰▰▰▰▱▱▱▱▱▱ 38% · Wed 7:00 PM`
+- Each bar is 10 cells, `▰` filled and `▱` empty, so it reads without colour. Any use fills at least one cell; all ten fill only at 100%.
 - Falls back to two rows (one per limit) when the band is too narrow for one.
 
 ## Colour thresholds
