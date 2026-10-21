@@ -130,6 +130,8 @@ export const register: Register = on => {
       )
     }
 
+    const age = ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>
+
     if (fitsOneRow(views, ageText, e.props.bodyColumns)) {
       return (
         <Text wrap="truncate">
@@ -139,7 +141,7 @@ export const register: Register = on => {
               {limit(view)}
             </Text>
           ))}
-          {ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+          {age}
         </Text>
       )
     }
@@ -149,7 +151,7 @@ export const register: Register = on => {
         {views.map((view, index) => (
           <Text wrap="truncate">
             {limit(view)}
-            {index === views.length - 1 && ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+            {index === views.length - 1 && age}
           </Text>
         ))}
       </Box>
