@@ -26,18 +26,30 @@ const DAY = 24 * HOUR
 
 export const BAR_WIDTH = 10
 
-/** Keeps the Session and Weekly limits from a measurement; null when it has neither. */
+/**
+ * Takes a Reading from a measurement's Session and Weekly limits; null when it
+ * has neither. A limit the measurement leaves out keeps its previous value, so
+ * a Reading always covers every limit seen so far.
+ */
 export function toReading(
   rateLimits: { kind: string; percentUsed: number; resetsAt?: string }[],
   takenAt: number,
+  previous: Reading | null = null,
 ): Reading | null {
-  const limits: Limit[] = ORDER.flatMap(kind => {
+  const measured = ORDER.flatMap(kind => {
     const found = rateLimits.find(one => one.kind === kind)
 
     return found ? [{ kind, percentUsed: found.percentUsed, resetsAt: found.resetsAt }] : []
   })
+  if (measured.length === 0) return null
 
-  return limits.length === 0 ? null : { takenAt, limits }
+  const limits: Limit[] = ORDER.flatMap(kind => {
+    const limit = measured.find(one => one.kind === kind) ?? previous?.limits.find(one => one.kind === kind)
+
+    return limit ? [limit] : []
+  })
+
+  return { takenAt, limits }
 }
 
 export function toneFor(percent: number): Tone {
@@ -90,9 +102,15 @@ export function formatAge(takenAt: number, now: number): string {
   return `as of ${days} ${days === 1 ? 'day' : 'days'} ago`
 }
 
-/** How many of the bar's cells are filled. */
+/**
+ * How many of the bar's cells are filled: at least one for any use, and all
+ * of them only once the limit is reached.
+ */
 export function filledCells(percent: number, width = BAR_WIDTH): number {
-  return Math.min(width, Math.max(0, Math.round((percent / 100) * width)))
+  if (percent <= 0) return 0
+  if (percent >= 100) return width
+
+  return Math.min(width - 1, Math.max(1, Math.round((percent / 100) * width)))
 }
 
 /**
@@ -123,7 +141,7 @@ export function viewLimits(
   })
 }
 
-/** Cells one limit takes: "Session limit ▬▬▬▬▬▬▬▬▬▬ 4% · in 3 hr 16 min". */
+/** Cells one limit takes: "Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)". */
 export function limitWidth(view: LimitView): number {
   const reset = view.resetText === undefined ? 0 : ` · ${view.resetText}`.length
 

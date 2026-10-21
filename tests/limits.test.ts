@@ -67,6 +67,22 @@ describe('readings', () => {
     expect(toReading([], NOW)).toBe(null)
   })
 
+  test('a limit left out of a measurement keeps its previous value', async () => {
+    const previous = toReading(
+      [
+        { kind: 'five_hour', percentUsed: 10 },
+        { kind: 'seven_day', percentUsed: 38 },
+      ],
+      NOW - HOUR,
+    )
+    const reading = toReading([{ kind: 'five_hour', percentUsed: 12 }], NOW, previous)
+    expect(reading?.limits).toEqual([
+      { kind: 'five_hour', percentUsed: 12, resetsAt: undefined },
+      { kind: 'seven_day', percentUsed: 38, resetsAt: undefined },
+    ])
+    expect(toReading([{ kind: 'spend_limit', percentUsed: 5 }], NOW, previous)).toBe(null)
+  })
+
   test('a limit whose reset time has passed shows dimmed 0% with no reset text', async () => {
     const reading = {
       takenAt: NOW - 10 * HOUR,
@@ -103,9 +119,12 @@ describe('stale reading age', () => {
 })
 
 describe('layout', () => {
-  test('the bar fills in proportion and stays within its width', async () => {
-    expect(filledCells(4)).toBe(0)
+  test('the bar fills in proportion, showing any use and full only at the limit', async () => {
+    expect(filledCells(0)).toBe(0)
+    expect(filledCells(1)).toBe(1)
+    expect(filledCells(4)).toBe(1)
     expect(filledCells(38)).toBe(4)
+    expect(filledCells(99)).toBe(9)
     expect(filledCells(100)).toBe(10)
     expect(filledCells(140)).toBe(10)
   })

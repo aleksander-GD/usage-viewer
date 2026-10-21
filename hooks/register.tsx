@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Reading } from '../types'
+import { usesHour12 } from './clock'
 import {
   BAR_WIDTH,
   SEPARATOR,
@@ -16,6 +17,7 @@ import type { LimitView, Tone } from './limits'
 const reading = atom({ plugin: 'usage-viewer', key: 'reading' } as const, null)
 const isFresh = atom({ plugin: 'usage-viewer', key: 'isFresh' } as const, false)
 const now = atom({ plugin: 'usage-viewer', key: 'now' } as const, 0)
+const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 
 const STORE_KEY = 'lastReading'
 const TICK_MS = 60_000
@@ -26,12 +28,25 @@ const TONE_COLORS: Record<Tone, string | undefined> = {
   error: 'error',
 }
 
-function prefersHour12(): boolean {
+/** One of the Mac's global preferences, or undefined where it is unset or unreadable. */
+async function readDefault($: EngineInterface, key: string): Promise<string | undefined> {
   try {
-    return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hour12 ?? true
+    const { exitCode, stdout } = await $.process.run(['/usr/bin/defaults', 'read', '-g', key])
+
+    return exitCode === 0 ? stdout.trim() : undefined
   } catch {
-    return true
+    return undefined
   }
+}
+
+async function readHour12($: EngineInterface): Promise<boolean> {
+  const [force24, force12, locale] = await Promise.all([
+    readDefault($, 'AppleICUForce24HourTime'),
+    readDefault($, 'AppleICUForce12HourTime'),
+    readDefault($, 'AppleLocale'),
+  ])
+
+  return usesHour12({ force24: force24 === '1', force12: force12 === '1', locale })
 }
 
 async function keep($: EngineInterface, fresh: Reading) {
@@ -41,18 +56,20 @@ async function keep($: EngineInterface, fresh: Reading) {
 }
 
 export const register: Register = on => {
-  const hour12 = prefersHour12()
-
   on('session.start', async ($, e, next) => {
     const started = await $.clock.now()
     await update($, now, () => started)
 
-    const current = toReading((await $.session.usage()).rateLimits, started)
+    const isHour12 = await readHour12($)
+    await update($, hour12, () => isHour12)
+
+    const saved = ((await $.store.get(STORE_KEY)) as Reading | undefined) ?? null
+    const previous = (await read($, reading)) ?? saved
+    const current = toReading((await $.session.usage()).rateLimits, started, previous)
     if (current !== null) {
       await keep($, current)
-    } else if ((await read($, reading)) === null) {
-      const saved = (await $.store.get(STORE_KEY)) as Reading | undefined
-      if (saved !== undefined) await update($, reading, () => saved)
+    } else if (previous !== null) {
+      await update($, reading, () => previous)
     }
 
     $.clock.every(TICK_MS, async () => {
@@ -65,8 +82,10 @@ export const register: Register = on => {
 
   on('session.measure', async ($, e, next) => {
     if (e.changed.includes('rateLimits')) {
-      const fresh = toReading(e.rateLimits, await $.clock.now())
-      if (fresh !== null) await keep($, fresh)
+      const fresh = toReading(e.rateLimits, await $.clock.now(), await read($, reading))
+      // No limits reported any more: what the band shows is now a Stale reading.
+      if (fresh === null) await update($, isFresh, () => false)
+      else await keep($, fresh)
     }
 
     return next(e)
@@ -78,7 +97,7 @@ export const register: Register = on => {
 
     const fresh = await read($, isFresh)
     const at = (await read($, now)) || shown.takenAt
-    const views = viewLimits(shown, { now: at, isFresh: fresh, hour12 })
+    const views = viewLimits(shown, { now: at, isFresh: fresh, hour12: await read($, hour12) })
     const ageText = fresh ? undefined : formatAge(shown.takenAt, at)
 
     const { Box, Text } = $.ui.resolve(e)
@@ -90,8 +109,8 @@ export const register: Register = on => {
       return (
         <Text dimColor={view.isDim}>
           {view.label}{' '}
-          <Text color={color}>{'▬'.repeat(filled)}</Text>
-          <Text color="subtle">{'▬'.repeat(BAR_WIDTH - filled)}</Text>
+          <Text mono color={color}>{'━'.repeat(filled)}</Text>
+          <Text mono color="subtle">{'─'.repeat(BAR_WIDTH - filled)}</Text>
           <Text tabular color={view.isDim ? undefined : TONE_COLORS[view.tone]}>
             {' '}
             {view.percent}%
@@ -117,10 +136,12 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column">
-        {views.map(view => (
-          <Text wrap="truncate">{limit(view)}</Text>
+        {views.map((view, index) => (
+          <Text wrap="truncate">
+            {limit(view)}
+            {index === views.length - 1 && ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+          </Text>
         ))}
-        {ageText !== undefined && <Text dimColor wrap="truncate">{ageText}</Text>}
       </Box>
     )
   })
