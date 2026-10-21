@@ -1,8 +1,8 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On, RenderElement, SessionRateLimit } from 'claude-code'
 
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
+import { HOUR, MINUTE } from '../hooks/time'
+
 const NOW = new Date(2026, 9, 20, 15, 44).getTime()
 
 const LIMITS: SessionRateLimit[] = [

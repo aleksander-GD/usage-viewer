@@ -13,6 +13,7 @@ import {
   viewLimits,
 } from './limits'
 import type { LimitView, Tone } from './limits'
+import { MINUTE } from './time'
 
 const reading = atom({ plugin: 'usage-viewer', key: 'reading' } as const, null)
 const isFresh = atom({ plugin: 'usage-viewer', key: 'isFresh' } as const, false)
@@ -20,7 +21,7 @@ const now = atom({ plugin: 'usage-viewer', key: 'now' } as const, 0)
 const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 
 const STORE_KEY = 'lastReading'
-const TICK_MS = 60_000
+const TICK_MS = MINUTE
 
 const TONE_COLORS: Record<Tone, string | undefined> = {
   normal: undefined,

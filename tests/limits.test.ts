@@ -11,9 +11,8 @@ import {
   toneFor,
   viewLimits,
 } from '../hooks/limits'
+import { HOUR, MINUTE } from '../hooks/time'
 
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
 const NOW = new Date(2026, 9, 20, 15, 44).getTime()
 
 describe('reset text', () => {

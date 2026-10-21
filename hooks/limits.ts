@@ -1,4 +1,5 @@
 import type { Limit, LimitKind, Reading } from '../types'
+import { DAY, HOUR, MINUTE } from './time'
 
 export type Tone = 'normal' | 'warning' | 'error'
 
@@ -19,10 +20,6 @@ const LABELS: Record<LimitKind, string> = {
 const ORDER: LimitKind[] = ['five_hour', 'seven_day']
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
-const DAY = 24 * HOUR
 
 export const BAR_WIDTH = 10
 
