@@ -12,9 +12,16 @@ export type LimitView = {
   isDim: boolean
 }
 
-const LABELS: Record<LimitKind, string> = {
-  five_hour: 'Session limit',
-  seven_day: 'Weekly · all models',
+/** How each limit is labelled and its reset worded, as in the Usage popover. */
+const KINDS: Record<LimitKind, { label: string; formatReset: (resetsAt: number, now: number, hour12: boolean) => string }> = {
+  five_hour: {
+    label: 'Session limit',
+    formatReset: (resetsAt, now, hour12) => `${formatRelativeReset(resetsAt, now)} (${formatClockTime(resetsAt, hour12)})`,
+  },
+  seven_day: {
+    label: 'Weekly · all models',
+    formatReset: (resetsAt, now, hour12) => formatClockReset(resetsAt, hour12),
+  },
 }
 
 const ORDER: LimitKind[] = ['five_hour', 'seven_day']
@@ -119,7 +126,7 @@ export function viewLimits(
   { now, isFresh, hour12 }: { now: number; isFresh: boolean; hour12: boolean },
 ): LimitView[] {
   return reading.limits.map(limit => {
-    const label = LABELS[limit.kind]
+    const { label, formatReset } = KINDS[limit.kind]
     const resetsAt = limit.resetsAt === undefined ? undefined : Date.parse(limit.resetsAt)
 
     if (resetsAt !== undefined && resetsAt <= now) {
@@ -127,12 +134,7 @@ export function viewLimits(
     }
 
     const percent = Math.round(limit.percentUsed)
-    const resetText =
-      resetsAt === undefined
-        ? undefined
-        : limit.kind === 'five_hour'
-          ? `${formatRelativeReset(resetsAt, now)} (${formatClockTime(resetsAt, hour12)})`
-          : formatClockReset(resetsAt, hour12)
+    const resetText = resetsAt === undefined ? undefined : formatReset(resetsAt, now, hour12)
 
     return { label, percent, resetText, tone: toneFor(percent), isDim: !isFresh }
   })
