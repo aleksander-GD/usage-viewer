@@ -29,6 +29,15 @@ const TONE_COLORS: Record<Tone, string | undefined> = {
   error: 'error',
 }
 
+/** The bar's and the percentage's colours for one limit: muted when dimmed, toned otherwise. */
+function colorsFor(view: LimitView): { bar: string; percent?: string } {
+  if (view.isDim) return { bar: 'inactive' }
+
+  const tone = TONE_COLORS[view.tone]
+
+  return { bar: tone ?? 'suggestion', percent: tone }
+}
+
 /** One of the Mac's global preferences, or undefined where it is unset or unreadable. */
 async function readDefault($: EngineInterface, key: string): Promise<string | undefined> {
   try {
@@ -105,14 +114,14 @@ export const register: Register = on => {
 
     const limit = (view: LimitView) => {
       const filled = filledCells(view.percent)
-      const color = view.isDim ? 'inactive' : (TONE_COLORS[view.tone] ?? 'suggestion')
+      const colors = colorsFor(view)
 
       return (
         <Text dimColor={view.isDim}>
           {view.label}{' '}
-          <Text mono color={color}>{'━'.repeat(filled)}</Text>
+          <Text mono color={colors.bar}>{'━'.repeat(filled)}</Text>
           <Text mono color="subtle">{'─'.repeat(BAR_WIDTH - filled)}</Text>
-          <Text tabular color={view.isDim ? undefined : TONE_COLORS[view.tone]}>
+          <Text tabular color={colors.percent}>
             {' '}
             {view.percent}%
           </Text>
