@@ -112,11 +112,11 @@ export function formatAge(takenAt: number, now: number): string {
  * How many of the bar's cells are filled: at least one for any use, and all
  * of them only once the limit is reached.
  */
-export function filledCells(percent: number, width = BAR_WIDTH): number {
+export function filledCells(percent: number): number {
   if (percent <= 0) return 0
-  if (percent >= 100) return width
+  if (percent >= 100) return BAR_WIDTH
 
-  return Math.min(width - 1, Math.max(1, Math.round((percent / 100) * width)))
+  return Math.min(BAR_WIDTH - 1, Math.max(1, Math.round((percent / 100) * BAR_WIDTH)))
 }
 
 /**
@@ -143,7 +143,7 @@ export function viewLimits(
 }
 
 /** Cells one limit takes: "Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)". */
-export function limitWidth(view: LimitView): number {
+function limitWidth(view: LimitView): number {
   const reset = view.resetText === undefined ? 0 : ` · ${view.resetText}`.length
 
   return `${view.label} `.length + BAR_WIDTH + ` ${view.percent}%`.length + reset
