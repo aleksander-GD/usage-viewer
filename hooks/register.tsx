@@ -13,19 +13,29 @@ import {
   viewLimits,
 } from './limits'
 import type { LimitView, Tone } from './limits'
+import { MINUTE } from './time'
 
 const reading = atom({ plugin: 'usage-viewer', key: 'reading' } as const, null)
-const isFresh = atom({ plugin: 'usage-viewer', key: 'isFresh' } as const, false)
+const isStale = atom({ plugin: 'usage-viewer', key: 'isStale' } as const, true)
 const now = atom({ plugin: 'usage-viewer', key: 'now' } as const, 0)
 const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 
 const STORE_KEY = 'lastReading'
-const TICK_MS = 60_000
+const TICK_MS = MINUTE
 
 const TONE_COLORS: Record<Tone, string | undefined> = {
   normal: undefined,
   warning: 'warning',
   error: 'error',
+}
+
+/** The bar's and the percentage's colours for one limit: muted when dimmed, toned otherwise. */
+function colorsFor(view: LimitView): { bar: string; percent?: string } {
+  if (view.isDim) return { bar: 'inactive' }
+
+  const tone = TONE_COLORS[view.tone]
+
+  return { bar: tone ?? 'suggestion', percent: tone }
 }
 
 /** One of the Mac's global preferences, or undefined where it is unset or unreadable. */
@@ -51,7 +61,7 @@ async function readHour12($: EngineInterface): Promise<boolean> {
 
 async function keep($: EngineInterface, fresh: Reading) {
   await update($, reading, () => fresh)
-  await update($, isFresh, () => true)
+  await update($, isStale, () => false)
   await $.store.set(STORE_KEY, fresh)
 }
 
@@ -84,7 +94,7 @@ export const register: Register = on => {
     if (e.changed.includes('rateLimits')) {
       const fresh = toReading(e.rateLimits, await $.clock.now(), await read($, reading))
       // No limits reported any more: what the band shows is now a Stale reading.
-      if (fresh === null) await update($, isFresh, () => false)
+      if (fresh === null) await update($, isStale, () => true)
       else await keep($, fresh)
     }
 
@@ -95,23 +105,23 @@ export const register: Register = on => {
     const shown = await read($, reading)
     if (e.props.hasSurvey || shown === null) return next(e)
 
-    const fresh = await read($, isFresh)
-    const at = (await read($, now)) || shown.takenAt
-    const views = viewLimits(shown, { now: at, isFresh: fresh, hour12: await read($, hour12) })
-    const ageText = fresh ? undefined : formatAge(shown.takenAt, at)
+    const isShownStale = await read($, isStale)
+    const drawnAt = (await read($, now)) || shown.takenAt
+    const views = viewLimits(shown, { now: drawnAt, isStale: isShownStale, hour12: await read($, hour12) })
+    const ageText = isShownStale ? formatAge(shown.takenAt, drawnAt) : undefined
 
     const { Box, Text } = $.ui.resolve(e)
 
     const limit = (view: LimitView) => {
       const filled = filledCells(view.percent)
-      const color = view.isDim ? 'inactive' : (TONE_COLORS[view.tone] ?? 'suggestion')
+      const colors = colorsFor(view)
 
       return (
         <Text dimColor={view.isDim}>
           {view.label}{' '}
-          <Text mono color={color}>{'━'.repeat(filled)}</Text>
+          <Text mono color={colors.bar}>{'━'.repeat(filled)}</Text>
           <Text mono color="subtle">{'─'.repeat(BAR_WIDTH - filled)}</Text>
-          <Text tabular color={view.isDim ? undefined : TONE_COLORS[view.tone]}>
+          <Text tabular color={colors.percent}>
             {' '}
             {view.percent}%
           </Text>
@@ -119,6 +129,8 @@ export const register: Register = on => {
         </Text>
       )
     }
+
+    const age = ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>
 
     if (fitsOneRow(views, ageText, e.props.bodyColumns)) {
       return (
@@ -129,7 +141,7 @@ export const register: Register = on => {
               {limit(view)}
             </Text>
           ))}
-          {ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+          {age}
         </Text>
       )
     }
@@ -139,7 +151,7 @@ export const register: Register = on => {
         {views.map((view, index) => (
           <Text wrap="truncate">
             {limit(view)}
-            {index === views.length - 1 && ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>}
+            {index === views.length - 1 && age}
           </Text>
         ))}
       </Box>

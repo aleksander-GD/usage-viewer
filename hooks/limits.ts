@@ -1,4 +1,7 @@
+import type { SessionRateLimit } from 'claude-code'
+
 import type { Limit, LimitKind, Reading } from '../types'
+import { DAY, HOUR, MINUTE } from './time'
 
 export type Tone = 'normal' | 'warning' | 'error'
 
@@ -11,18 +14,21 @@ export type LimitView = {
   isDim: boolean
 }
 
-const LABELS: Record<LimitKind, string> = {
-  five_hour: 'Session limit',
-  seven_day: 'Weekly · all models',
+/** How each limit is labelled and its reset worded, as in the Usage popover. */
+const KINDS: Record<LimitKind, { label: string; formatReset: (resetsAt: number, now: number, hour12: boolean) => string }> = {
+  five_hour: {
+    label: 'Session limit',
+    formatReset: (resetsAt, now, hour12) => `${formatRelativeReset(resetsAt, now)} (${formatClockTime(resetsAt, hour12)})`,
+  },
+  seven_day: {
+    label: 'Weekly · all models',
+    formatReset: (resetsAt, now, hour12) => formatClockReset(resetsAt, hour12),
+  },
 }
 
 const ORDER: LimitKind[] = ['five_hour', 'seven_day']
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
-const DAY = 24 * HOUR
 
 export const BAR_WIDTH = 10
 
@@ -32,7 +38,7 @@ export const BAR_WIDTH = 10
  * a Reading always covers every limit seen so far.
  */
 export function toReading(
-  rateLimits: { kind: string; percentUsed: number; resetsAt?: string }[],
+  rateLimits: readonly SessionRateLimit[],
   takenAt: number,
   previous: Reading | null = null,
 ): Reading | null {
@@ -106,11 +112,11 @@ export function formatAge(takenAt: number, now: number): string {
  * How many of the bar's cells are filled: at least one for any use, and all
  * of them only once the limit is reached.
  */
-export function filledCells(percent: number, width = BAR_WIDTH): number {
+export function filledCells(percent: number): number {
   if (percent <= 0) return 0
-  if (percent >= 100) return width
+  if (percent >= 100) return BAR_WIDTH
 
-  return Math.min(width - 1, Math.max(1, Math.round((percent / 100) * width)))
+  return Math.min(BAR_WIDTH - 1, Math.max(1, Math.round((percent / 100) * BAR_WIDTH)))
 }
 
 /**
@@ -119,10 +125,10 @@ export function filledCells(percent: number, width = BAR_WIDTH): number {
  */
 export function viewLimits(
   reading: Reading,
-  { now, isFresh, hour12 }: { now: number; isFresh: boolean; hour12: boolean },
+  { now, isStale, hour12 }: { now: number; isStale: boolean; hour12: boolean },
 ): LimitView[] {
   return reading.limits.map(limit => {
-    const label = LABELS[limit.kind]
+    const { label, formatReset } = KINDS[limit.kind]
     const resetsAt = limit.resetsAt === undefined ? undefined : Date.parse(limit.resetsAt)
 
     if (resetsAt !== undefined && resetsAt <= now) {
@@ -130,19 +136,14 @@ export function viewLimits(
     }
 
     const percent = Math.round(limit.percentUsed)
-    const resetText =
-      resetsAt === undefined
-        ? undefined
-        : limit.kind === 'five_hour'
-          ? `${formatRelativeReset(resetsAt, now)} (${formatClockTime(resetsAt, hour12)})`
-          : formatClockReset(resetsAt, hour12)
+    const resetText = resetsAt === undefined ? undefined : formatReset(resetsAt, now, hour12)
 
-    return { label, percent, resetText, tone: toneFor(percent), isDim: !isFresh }
+    return { label, percent, resetText, tone: toneFor(percent), isDim: isStale }
   })
 }
 
 /** Cells one limit takes: "Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)". */
-export function limitWidth(view: LimitView): number {
+function limitWidth(view: LimitView): number {
   const reset = view.resetText === undefined ? 0 : ` · ${view.resetText}`.length
 
   return `${view.label} `.length + BAR_WIDTH + ` ${view.percent}%`.length + reset

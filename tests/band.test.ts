@@ -1,8 +1,8 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 import type { On, RenderElement, SessionRateLimit } from 'claude-code'
 
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
+import { HOUR, MINUTE } from '../hooks/time'
+
 const NOW = new Date(2026, 9, 20, 15, 44).getTime()
 
 const LIMITS: SessionRateLimit[] = [
@@ -25,7 +25,7 @@ const props = (overrides: { hasSurvey?: boolean; bodyColumns?: number } = {}) =>
 const SURFACES = ['terminal', 'desktop'] as const
 
 /** The engine beneath the mod: a clock, a store, and the session's usage figures. */
-function world(
+function engineBeneath(
   on: On,
   {
     saved,
@@ -59,7 +59,7 @@ const START = { cwd: '/tmp', surface: 'desktop' as const, isInteractive: true }
 
 describe('Limit band', () => {
   test('draws both limits once a Reading arrives', async ($, on) => {
-    world(on)
+    engineBeneath(on)
     await $.session.start(START)
     await $.session.measure({ context: CONTEXT, rateLimits: LIMITS, changed: ['rateLimits'] })
 
@@ -74,7 +74,7 @@ describe('Limit band', () => {
   })
 
   test('shows the saved Reading as stale until a fresh one arrives', async ($, on) => {
-    const clock = world(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
+    const clock = engineBeneath(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -90,7 +90,7 @@ describe('Limit band', () => {
   })
 
   test('keeps a narrow Stale reading to two rows, the age on the last', async ($, on) => {
-    world(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
+    engineBeneath(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -108,7 +108,7 @@ describe('Limit band', () => {
   })
 
   test('marks the Reading stale when the limits stop being reported', async ($, on) => {
-    const clock = world(on)
+    const clock = engineBeneath(on)
     await $.session.start(START)
     await $.session.measure({ context: CONTEXT, rateLimits: LIMITS, changed: ['rateLimits'] })
     await clock.advance(5 * MINUTE)
@@ -121,7 +121,7 @@ describe('Limit band', () => {
   })
 
   test('uses two rows when the band is narrow', async ($, on) => {
-    world(on, { current: LIMITS })
+    engineBeneath(on, { current: LIMITS })
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -137,7 +137,7 @@ describe('Limit band', () => {
   })
 
   test('steps aside for a survey', async ($, on) => {
-    world(on, { current: LIMITS })
+    engineBeneath(on, { current: LIMITS })
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -154,7 +154,7 @@ describe('Limit band', () => {
   })
 
   test('draws nothing when there has never been a Reading', async ($, on) => {
-    world(on)
+    engineBeneath(on)
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -166,7 +166,7 @@ describe('Limit band', () => {
   })
 
   test("shows clock times in the Mac's 12h or 24h format", async ($, on) => {
-    world(on, { current: LIMITS, macDefaults: { AppleLocale: 'en_DK' } })
+    engineBeneath(on, { current: LIMITS, macDefaults: { AppleLocale: 'en_DK' } })
     await $.session.start(START)
 
     const ui = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'AbovePrompt', props: props() })
@@ -176,7 +176,7 @@ describe('Limit band', () => {
   })
 
   test('a forced 12h clock wins over a 24h region', async ($, on) => {
-    world(on, { current: LIMITS, macDefaults: { AppleLocale: 'en_DK', AppleICUForce12HourTime: '1' } })
+    engineBeneath(on, { current: LIMITS, macDefaults: { AppleLocale: 'en_DK', AppleICUForce12HourTime: '1' } })
     await $.session.start(START)
 
     const ui = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'AbovePrompt', props: props() })

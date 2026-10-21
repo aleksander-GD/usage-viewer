@@ -11,9 +11,8 @@ import {
   toneFor,
   viewLimits,
 } from '../hooks/limits'
+import { HOUR, MINUTE } from '../hooks/time'
 
-const MINUTE = 60_000
-const HOUR = 60 * MINUTE
 const NOW = new Date(2026, 9, 20, 15, 44).getTime()
 
 describe('reset text', () => {
@@ -37,8 +36,8 @@ describe('reset text', () => {
       takenAt: NOW,
       limits: [{ kind: 'five_hour' as const, percentUsed: 4, resetsAt: new Date(2026, 9, 20, 19, 0).toISOString() }],
     }
-    expect(viewLimits(reading, { now: NOW, isFresh: true, hour12: true })[0]?.resetText).toBe('in 3 hr 16 min (7:00 PM)')
-    expect(viewLimits(reading, { now: NOW, isFresh: true, hour12: false })[0]?.resetText).toBe('in 3 hr 16 min (19:00)')
+    expect(viewLimits(reading, { now: NOW, isStale: false, hour12: true })[0]?.resetText).toBe('in 3 hr 16 min (7:00 PM)')
+    expect(viewLimits(reading, { now: NOW, isStale: false, hour12: false })[0]?.resetText).toBe('in 3 hr 16 min (19:00)')
     expect(formatClockTime(new Date(2026, 9, 20, 12, 0).getTime(), true)).toBe('12:00 PM')
   })
 })
@@ -91,11 +90,11 @@ describe('readings', () => {
         { kind: 'seven_day' as const, percentUsed: 38, resetsAt: new Date(NOW + 30 * HOUR).toISOString() },
       ],
     }
-    const [session, weekly] = viewLimits(reading, { now: NOW, isFresh: false, hour12: true })
-    expect(session).toEqual({ label: 'Session limit', percent: 0, tone: 'normal', isDim: true })
-    expect(weekly?.percent).toBe(38)
-    expect(weekly?.isDim).toBe(true)
-    expect(weekly?.resetText).toBeDefined()
+    const [sessionLimit, weeklyLimit] = viewLimits(reading, { now: NOW, isStale: true, hour12: true })
+    expect(sessionLimit).toEqual({ label: 'Session limit', percent: 0, tone: 'normal', isDim: true })
+    expect(weeklyLimit?.percent).toBe(38)
+    expect(weeklyLimit?.isDim).toBe(true)
+    expect(weeklyLimit?.resetText).toBeDefined()
   })
 
   test('a fresh reading is not dimmed and rounds its percentage', async () => {
@@ -103,8 +102,8 @@ describe('readings', () => {
       takenAt: NOW,
       limits: [{ kind: 'five_hour' as const, percentUsed: 91.6, resetsAt: new Date(NOW + HOUR).toISOString() }],
     }
-    const [session] = viewLimits(reading, { now: NOW, isFresh: true, hour12: true })
-    expect(session).toEqual({ label: 'Session limit', percent: 92, resetText: `in 1 hr (${formatClockTime(NOW + HOUR, true)})`, tone: 'error', isDim: false })
+    const [sessionLimit] = viewLimits(reading, { now: NOW, isStale: false, hour12: true })
+    expect(sessionLimit).toEqual({ label: 'Session limit', percent: 92, resetText: `in 1 hr (${formatClockTime(NOW + HOUR, true)})`, tone: 'error', isDim: false })
   })
 })
 
