@@ -63,12 +63,13 @@ export const register: Register = on => {
     const isHour12 = await readHour12($)
     await update($, hour12, () => isHour12)
 
-    const current = toReading((await $.session.usage()).rateLimits, started)
+    const saved = ((await $.store.get(STORE_KEY)) as Reading | undefined) ?? null
+    const previous = (await read($, reading)) ?? saved
+    const current = toReading((await $.session.usage()).rateLimits, started, previous)
     if (current !== null) {
       await keep($, current)
-    } else if ((await read($, reading)) === null) {
-      const saved = (await $.store.get(STORE_KEY)) as Reading | undefined
-      if (saved !== undefined) await update($, reading, () => saved)
+    } else if (previous !== null) {
+      await update($, reading, () => previous)
     }
 
     $.clock.every(TICK_MS, async () => {
@@ -81,8 +82,10 @@ export const register: Register = on => {
 
   on('session.measure', async ($, e, next) => {
     if (e.changed.includes('rateLimits')) {
-      const fresh = toReading(e.rateLimits, await $.clock.now())
-      if (fresh !== null) await keep($, fresh)
+      const fresh = toReading(e.rateLimits, await $.clock.now(), await read($, reading))
+      // No limits reported any more: what the band shows is now a Stale reading.
+      if (fresh === null) await update($, isFresh, () => false)
+      else await keep($, fresh)
     }
 
     return next(e)

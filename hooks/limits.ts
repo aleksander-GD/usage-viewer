@@ -26,18 +26,30 @@ const DAY = 24 * HOUR
 
 export const BAR_WIDTH = 10
 
-/** Keeps the Session and Weekly limits from a measurement; null when it has neither. */
+/**
+ * Takes a Reading from a measurement's Session and Weekly limits; null when it
+ * has neither. A limit the measurement leaves out keeps its previous value, so
+ * a Reading always covers every limit seen so far.
+ */
 export function toReading(
   rateLimits: { kind: string; percentUsed: number; resetsAt?: string }[],
   takenAt: number,
+  previous: Reading | null = null,
 ): Reading | null {
-  const limits: Limit[] = ORDER.flatMap(kind => {
+  const measured = ORDER.flatMap(kind => {
     const found = rateLimits.find(one => one.kind === kind)
 
     return found ? [{ kind, percentUsed: found.percentUsed, resetsAt: found.resetsAt }] : []
   })
+  if (measured.length === 0) return null
 
-  return limits.length === 0 ? null : { takenAt, limits }
+  const limits: Limit[] = ORDER.flatMap(kind => {
+    const limit = measured.find(one => one.kind === kind) ?? previous?.limits.find(one => one.kind === kind)
+
+    return limit ? [limit] : []
+  })
+
+  return { takenAt, limits }
 }
 
 export function toneFor(percent: number): Tone {

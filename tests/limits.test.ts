@@ -67,6 +67,22 @@ describe('readings', () => {
     expect(toReading([], NOW)).toBe(null)
   })
 
+  test('a limit left out of a measurement keeps its previous value', async () => {
+    const previous = toReading(
+      [
+        { kind: 'five_hour', percentUsed: 10 },
+        { kind: 'seven_day', percentUsed: 38 },
+      ],
+      NOW - HOUR,
+    )
+    const reading = toReading([{ kind: 'five_hour', percentUsed: 12 }], NOW, previous)
+    expect(reading?.limits).toEqual([
+      { kind: 'five_hour', percentUsed: 12, resetsAt: undefined },
+      { kind: 'seven_day', percentUsed: 38, resetsAt: undefined },
+    ])
+    expect(toReading([{ kind: 'spend_limit', percentUsed: 5 }], NOW, previous)).toBe(null)
+  })
+
   test('a limit whose reset time has passed shows dimmed 0% with no reset text', async () => {
     const reading = {
       takenAt: NOW - 10 * HOUR,

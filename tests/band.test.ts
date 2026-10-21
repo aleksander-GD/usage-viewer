@@ -107,6 +107,19 @@ describe('Limit band', () => {
     }
   })
 
+  test('marks the Reading stale when the limits stop being reported', async ($, on) => {
+    const clock = world(on)
+    await $.session.start(START)
+    await $.session.measure({ context: CONTEXT, rateLimits: LIMITS, changed: ['rateLimits'] })
+    await clock.advance(5 * MINUTE)
+    await $.session.measure({ context: CONTEXT, rateLimits: [], changed: ['rateLimits'] })
+
+    const ui = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'AbovePrompt', props: props() })
+    expect(await ui.find({ type: 'Text', text: /Session limit/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /as of 5 min ago/ })).toBeDefined()
+    await ui.unmount()
+  })
+
   test('uses two rows when the band is narrow', async ($, on) => {
     world(on, { current: LIMITS })
     await $.session.start(START)
