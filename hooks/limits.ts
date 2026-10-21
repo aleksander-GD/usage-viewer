@@ -125,7 +125,7 @@ export function filledCells(percent: number): number {
  */
 export function viewLimits(
   reading: Reading,
-  { now, isFresh, hour12 }: { now: number; isFresh: boolean; hour12: boolean },
+  { now, isStale, hour12 }: { now: number; isStale: boolean; hour12: boolean },
 ): LimitView[] {
   return reading.limits.map(limit => {
     const { label, formatReset } = KINDS[limit.kind]
@@ -138,7 +138,7 @@ export function viewLimits(
     const percent = Math.round(limit.percentUsed)
     const resetText = resetsAt === undefined ? undefined : formatReset(resetsAt, now, hour12)
 
-    return { label, percent, resetText, tone: toneFor(percent), isDim: !isFresh }
+    return { label, percent, resetText, tone: toneFor(percent), isDim: isStale }
   })
 }
 
