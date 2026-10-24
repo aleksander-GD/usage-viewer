@@ -3,7 +3,7 @@
 A Claude Code mod that keeps your plan limits visible in a band above the prompt, so you don't have to open the usage popover:
 
 ```
-Session limit ▬▬▬▬▬▬▬▬▬▬ 4% · in 3 hr 16 min (7:00 PM)  │  Weekly · all models ▬▬▬▬▬▬▬▬▬▬ 38% · Wed 7:00 PM
+Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)  │  Weekly · all models ━━━━────── 38% · Wed 7:00 PM
 ```
 
 - Bars and percentages turn amber at 75% and red at 90%.
