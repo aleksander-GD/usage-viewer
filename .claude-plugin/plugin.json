@@ -1,6 +1,6 @@
 {
   "name": "usage-viewer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Keeps the Session limit and Weekly limit visible in a band above the prompt.",
   "types": "./types/index.d.ts"
 }

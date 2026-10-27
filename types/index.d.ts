@@ -16,8 +16,9 @@ declare module 'claude-code' {
   interface PluginState {
     'usage-viewer': {
       reading: Reading | null
-      isFresh: boolean
+      isStale: boolean
       now: number
+      hour12: boolean
     }
   }
 }

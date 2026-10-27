@@ -3,7 +3,7 @@
 A Claude Code mod that keeps your plan limits visible in a band above the prompt, so you don't have to open the usage popover:
 
 ```
-Session limit ▬▬▬▬▬▬▬▬▬▬ 4% · in 3 hr 16 min (7:00 PM)  │  Weekly · all models ▬▬▬▬▬▬▬▬▬▬ 38% · Wed 7:00 PM
+Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)  │  Weekly · all models ━━━━────── 38% · Wed 7:00 PM
 ```
 
 - Bars and percentages turn amber at 75% and red at 90%.
@@ -13,9 +13,9 @@ Session limit ▬▬▬▬▬▬▬▬▬▬ 4% · in 3 hr 16 min (7:00 PM)  │
 
 See [SPEC.md](SPEC.md) for the full behaviour and [GLOSSARY.md](GLOSSARY.md) for the terms.
 
-## Install (every desktop session)
+## Install (every Claude Code session)
 
-Add this folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/settings.json`, then start a new session:
+Add this folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/settings.json`, then start a new Claude Code session:
 
 ```json
 {
@@ -25,7 +25,7 @@ Add this folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/se
 }
 ```
 
-For one terminal session only: `claude --plugin-dir /path/to/usage-viewer`.
+For one terminal Claude Code session only: `claude --plugin-dir /path/to/usage-viewer`.
 
 ## Develop
 
