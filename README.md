@@ -38,3 +38,7 @@ claude plugin test .
 ```
 
 The pure formatting logic is in `hooks/limits.ts`, and the band and event wiring is in `hooks/register.tsx`.
+
+## Commit messages
+
+Commits and PR titles use [gitmoji](https://gitmoji.dev): one official gitmoji, a space, then an imperative subject starting with a capital letter, at most 72 characters (`🐛 Keep both limits in every Reading`). PRs are merged with a merge commit named after the PR title. The `Gitmoji` check on each PR enforces this.
