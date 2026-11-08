@@ -112,11 +112,11 @@ export function formatAge(takenAt: number, now: number): string {
  * How many of the bar's cells are filled: at least one for any use, and all
  * of them only once the limit is reached.
  */
-export function filledCells(percent: number): number {
+export function filledCells(percent: number, width = BAR_WIDTH): number {
   if (percent <= 0) return 0
-  if (percent >= 100) return BAR_WIDTH
+  if (percent >= 100) return width
 
-  return Math.min(BAR_WIDTH - 1, Math.max(1, Math.round((percent / 100) * BAR_WIDTH)))
+  return Math.min(width - 1, Math.max(1, Math.round((percent / 100) * width)))
 }
 
 /**
@@ -158,4 +158,17 @@ export function fitsOneRow(views: LimitView[], ageText: string | undefined, colu
   const age = ageText === undefined ? 0 : SEPARATOR.length + ageText.length
 
   return limits + separators + age <= columns
+}
+
+/** The Usage sidebar's heading line for one limit: its reset wording, as the Usage popover has it. */
+export function sidebarResetText(view: LimitView): string | undefined {
+  return view.resetText === undefined ? undefined : `Resets ${view.resetText}`
+}
+
+/** Whether a limit's label, reset text and percentage fit on one line of the Usage sidebar. */
+export function fitsSidebarHeading(view: LimitView, columns: number): boolean {
+  const reset = sidebarResetText(view)
+  const resetWidth = reset === undefined ? 0 : reset.length + 2
+
+  return view.label.length + 2 + resetWidth + `${view.percent}%`.length <= columns
 }
