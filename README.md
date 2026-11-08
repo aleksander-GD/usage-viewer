@@ -13,7 +13,7 @@ Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM)  │
 
 ### Usage sidebar
 
-Where the surface can dock a pane beside the transcript (the terminal in fullscreen mode, `"tui": "fullscreen"`, or a client that docks panes), a **Usage sidebar** opens by itself, laid out like the usage popover, and the band hides. Run `/usage-viewer` to open it anywhere, or to bring it back after closing it.
+Where the surface can dock a pane beside the transcript (the terminal in fullscreen mode, `"tui": "fullscreen"`, or a client that docks panes), a **Usage sidebar** opens by itself, laid out like the usage popover, and the band hides. Run `/usage-viewer`, or press **Open sidebar** at the end of the band, to open it anywhere or bring it back after closing it.
 
 See [SPEC.md](SPEC.md) for the full behaviour and [GLOSSARY.md](GLOSSARY.md) for the terms.
 

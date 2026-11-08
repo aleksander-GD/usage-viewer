@@ -62,6 +62,15 @@ async function offerSidebar($: EngineInterface) {
   return opened
 }
 
+/** Opens the Usage sidebar because the person asked, through the command or the band's button. */
+async function openSidebarAsked($: EngineInterface) {
+  await update($, isSidebarDismissed, () => false)
+  const opened = await $.ui.open({ id: SIDEBAR, title: SIDEBAR_TITLE })
+  await update($, isSidebarOpen, () => true)
+
+  return opened
+}
+
 /** Registers the command and opens the Usage sidebar where a surface docks it beside the transcript. */
 async function setUpSidebar($: EngineInterface) {
   await $.command.register({ name: COMMAND, description: 'Show plan usage limits in a sidebar' })
@@ -130,9 +139,7 @@ export const register: Register = on => {
   })
 
   on('command.run', { command: COMMAND }, async $ => {
-    await update($, isSidebarDismissed, () => false)
-    const opened = await $.ui.open({ id: SIDEBAR, title: SIDEBAR_TITLE })
-    await update($, isSidebarOpen, () => true)
+    const opened = await openSidebarAsked($)
 
     return { text: opened.isPlaced ? 'Usage sidebar opened.' : `Usage sidebar is waiting: ${opened.reason}` }
   }).catch(() => ({ text: 'The Usage sidebar could not be opened.' }))
@@ -166,6 +173,11 @@ export const register: Register = on => {
     const views = viewLimits(shown, { now: drawnAt, isStale: isShownStale, hour12: await read($, hour12) })
     const ageText = isShownStale ? formatAge(shown.takenAt, drawnAt) : undefined
 
-    return drawBand($.ui.resolve(e), { views, ageText, columns: e.props.bodyColumns })
+    return drawBand($.ui.resolve(e), {
+      views,
+      ageText,
+      columns: e.props.bodyColumns,
+      openSidebar: () => void openSidebarAsked($),
+    })
   })
 }

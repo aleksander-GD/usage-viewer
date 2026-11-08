@@ -53,7 +53,7 @@ Where it appears:
 | Desktop app, VS Code, other attached clients | Opens by itself when the client says it docks panes | Shown when the sidebar isn't |
 
 - The Limit band and the Usage sidebar never show at the same time.
-- `/usage-viewer` opens the sidebar on any surface.
+- `/usage-viewer` opens the sidebar on any surface, and so does the band's **Open sidebar** button at the right end of its first row. A mod cannot add an icon to the desktop app's own toolbar, so the button is the one-click way back.
 - Closing the sidebar keeps it closed for that Claude Code session until `/usage-viewer` is run again.
 
 ## Colour thresholds

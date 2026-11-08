@@ -95,4 +95,21 @@ describe('Usage sidebar', () => {
     expect(await ui.find({ type: 'Text', text: /Session limit/ })).toBeUndefined()
     await ui.unmount()
   })
+
+  test("the band's button brings the sidebar back", async ($, on) => {
+    const { opened } = engineBeneath(on, { current: LIMITS, surfaces: ['terminal'] })
+    await $.session.start(START)
+    expect(opened).toEqual([])
+
+    for (const surface of SURFACES) {
+      const ui = await $.ui.mount({ plugin: 'usage-viewer', surface, component: 'AbovePrompt', props: props() })
+      expect(await ui.find({ type: 'Button', key: 'open-sidebar' })).toBeDefined()
+      await ui.unmount()
+    }
+
+    const ui = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'AbovePrompt', props: props() })
+    await ui.press({ key: 'open-sidebar' })
+    expect(opened).toEqual(['usage'])
+    await ui.unmount()
+  })
 })
