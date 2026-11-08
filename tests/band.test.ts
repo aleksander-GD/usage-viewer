@@ -1,61 +1,7 @@
-import { describe, expect, mock, test } from 'claude-code/testing'
-import type { On, RenderElement, SessionRateLimit } from 'claude-code'
+import { describe, expect, test } from 'claude-code/testing'
 
-import { HOUR, MINUTE } from '../hooks/time'
-
-const NOW = new Date(2026, 9, 20, 15, 44).getTime()
-
-const LIMITS: SessionRateLimit[] = [
-  { kind: 'five_hour', percentUsed: 4, resetsAt: new Date(NOW + 3 * HOUR).toISOString() },
-  { kind: 'seven_day', percentUsed: 92, resetsAt: new Date(NOW + 30 * HOUR).toISOString() },
-]
-
-const CONTEXT = { window: 200_000 }
-
-const props = (overrides: { hasSurvey?: boolean; bodyColumns?: number } = {}) => ({
-  hasSurvey: false,
-  isWorking: false,
-  maxRows: 10,
-  bodyColumns: 140,
-  scroll: { offset: 0, bodyRows: 9 },
-  view: {},
-  ...overrides,
-})
-
-const SURFACES = ['terminal', 'desktop'] as const
-
-/** The engine beneath the mod: a clock, a store, and the session's usage figures. */
-function engineBeneath(
-  on: On,
-  {
-    saved,
-    current = [],
-    macDefaults = {},
-  }: { saved?: unknown; current?: SessionRateLimit[]; macDefaults?: Record<string, string> } = {},
-) {
-  const clock = mock.clock(on, { now: NOW })
-  // Answers `defaults read -g <key>` from macDefaults; an unset key exits 1, as on a Mac.
-  on('process.run', ($, e) => {
-    const value = macDefaults[e.argv[3] ?? '']
-    const ran = { stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
-
-    return { value: value === undefined ? { ...ran, exitCode: 1, stdout: '' } : { ...ran, exitCode: 0, stdout: `${value}\n` } }
-  })
-  mock.store(on, saved === undefined ? {} : { lastReading: saved })
-  on('session.usage', () => ({ value: { startedAt: NOW, context: CONTEXT, rateLimits: current } }))
-  // Stands for what the app draws in the band when the mod steps aside.
-  on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
-    const { Text } = $.ui.resolve(e)
-
-    return h(Text, {}, 'engine band') as RenderElement
-  })
-  on('session.start', () => ({ cwd: '/tmp' }))
-  on('session.measure', ($, e) => ({ changed: e.changed }))
-
-  return clock
-}
-
-const START = { cwd: '/tmp', surface: 'desktop' as const, isInteractive: true }
+import { MINUTE } from '../hooks/time'
+import { CONTEXT, LIMITS, NOW, START, SURFACES, engineBeneath, props } from './world'
 
 describe('Limit band', () => {
   test('draws both limits once a Reading arrives', async ($, on) => {
@@ -74,7 +20,7 @@ describe('Limit band', () => {
   })
 
   test('shows the saved Reading as stale until a fresh one arrives', async ($, on) => {
-    const clock = engineBeneath(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
+    const { clock } = engineBeneath(on, { saved: { takenAt: NOW - 14 * MINUTE, limits: LIMITS } })
     await $.session.start(START)
 
     for (const surface of SURFACES) {
@@ -108,7 +54,7 @@ describe('Limit band', () => {
   })
 
   test('marks the Reading stale when the limits stop being reported', async ($, on) => {
-    const clock = engineBeneath(on)
+    const { clock } = engineBeneath(on)
     await $.session.start(START)
     await $.session.measure({ context: CONTEXT, rateLimits: LIMITS, changed: ['rateLimits'] })
     await clock.advance(5 * MINUTE)

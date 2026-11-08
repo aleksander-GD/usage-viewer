@@ -1,6 +1,6 @@
 # usage-viewer — spec
 
-A personal Claude Code mod for the desktop Code tab that keeps **Limit usage** visible in a **Limit band** above the input field, so the **Usage popover** never needs opening. Terms are defined in [GLOSSARY.md](GLOSSARY.md).
+A personal Claude Code mod that keeps **Limit usage** visible, in a **Usage sidebar** beside the transcript where the surface can dock one and in a **Limit band** above the input field everywhere else, so the **Usage popover** never needs opening. Terms are defined in [GLOSSARY.md](GLOSSARY.md).
 
 Audience: just the author, on their own Mac. Not distributed as a plugin.
 
@@ -23,6 +23,38 @@ Model-specific weekly limits are **out of scope** for v1.
   `Session limit ━───────── 4% · in 3 hr 16 min (7:00 PM) │ Weekly · all models ━━━━────── 38% · Wed 7:00 PM`
 - Each bar is a line 10 cells long, like the Usage popover's: a heavy `━` for the used part and a thin `─` for the rest, so it reads without colour. Any use fills at least one cell; all ten fill only at 100%.
 - Falls back to two rows (one per limit) when the band is too narrow for one.
+
+## Usage sidebar
+
+Laid out like the Usage popover:
+
+```
+Usage
+
+Session limit      Resets in 3 hr 16 min (19:00)  4%
+━─────────────────────────────────────────────────────
+
+Weekly · all models            Resets Wed 19:00  38%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━──────────────────
+
+as of 14 min ago   (only for a Stale reading)
+```
+
+- Each bar spans the sidebar's width, with the band's rules: heavy `━` used, thin `─` the rest, at least one cell for any use, full only at 100%.
+- Where label, reset text and percentage don't fit on one line, the reset text moves under the bar.
+- Before any Reading exists it says so instead of showing empty bars.
+
+Where it appears:
+
+| Surface | Usage sidebar | Limit band |
+|---|---|---|
+| Terminal in fullscreen (`tui: "fullscreen"`), 110+ columns | Docked beside the transcript; opens by itself from 144 columns | Hidden while the sidebar shows |
+| Terminal on the main screen, or too narrow | Only through `/usage-viewer`, inline above the prompt | Shown when the sidebar isn't |
+| Desktop app, VS Code, other attached clients | Opens by itself when the client says it docks panes | Shown when the sidebar isn't |
+
+- The Limit band and the Usage sidebar never show at the same time.
+- `/usage-viewer` opens the sidebar on any surface.
+- Closing the sidebar keeps it closed for that Claude Code session until `/usage-viewer` is run again.
 
 ## Colour thresholds
 
@@ -60,7 +92,7 @@ Reset text redraws every 60 s with no network call. It costs no tokens: what the
 
 ## Not in v1
 
-- A toggle command. To turn the band off, remove the mod.
+- A way to hide the Limit band itself. To turn it off, remove the mod.
 - Model-specific weekly limits.
 - A status line for the terminal CLI.
 

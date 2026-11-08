@@ -29,8 +29,12 @@ The last saved Reading, shown until a fresh one arrives in the current Claude Co
 _Avoid_: Cached data, old value
 
 **Limit band**:
-The strip above the input field where this mod shows Limit usage.
+The strip above the input field where this mod shows Limit usage while the Usage sidebar is not shown.
 _Avoid_: Status bar, banner, widget
+
+**Usage sidebar**:
+The pane beside the transcript where this mod shows Limit usage laid out like the Usage popover.
+_Avoid_: Panel, side bar, pane (on its own)
 
 **Usage popover**:
 The built-in panel opened by clicking the small circle icon, which this mod exists to make unnecessary.

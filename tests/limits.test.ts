@@ -2,6 +2,8 @@ import { describe, expect, test } from 'claude-code/testing'
 
 import {
   filledCells,
+  fitsSidebarHeading,
+  sidebarResetText,
   fitsOneRow,
   formatAge,
   formatClockReset,
@@ -126,6 +128,19 @@ describe('layout', () => {
     expect(filledCells(99)).toBe(9)
     expect(filledCells(100)).toBe(10)
     expect(filledCells(140)).toBe(10)
+  })
+
+  test('a sidebar bar fills its own width', async () => {
+    expect(filledCells(38, 40)).toBe(15)
+    expect(filledCells(1, 40)).toBe(1)
+    expect(filledCells(99, 40)).toBe(39)
+  })
+
+  test("the sidebar's heading keeps label, reset and percentage on one line only when they fit", async () => {
+    const view = { label: 'Session limit', percent: 4, resetText: 'in 3 hr 16 min (19:00)', tone: 'normal' as const, isDim: false }
+    expect(sidebarResetText(view)).toBe('Resets in 3 hr 16 min (19:00)')
+    expect(fitsSidebarHeading(view, 60)).toBe(true)
+    expect(fitsSidebarHeading(view, 40)).toBe(false)
   })
 
   test('falls back to two rows when one row does not fit', async () => {
