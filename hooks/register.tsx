@@ -2,17 +2,9 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Reading } from '../types'
+import { drawBand } from './band'
 import { usesHour12 } from './clock'
-import {
-  BAR_WIDTH,
-  SEPARATOR,
-  filledCells,
-  fitsOneRow,
-  formatAge,
-  toReading,
-  viewLimits,
-} from './limits'
-import type { LimitView, Tone } from './limits'
+import { formatAge, toReading, viewLimits } from './limits'
 import { MINUTE } from './time'
 
 const reading = atom({ plugin: 'usage-viewer', key: 'reading' } as const, null)
@@ -22,21 +14,6 @@ const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 
 const STORE_KEY = 'lastReading'
 const TICK_MS = MINUTE
-
-const TONE_COLORS: Record<Tone, string | undefined> = {
-  normal: undefined,
-  warning: 'warning',
-  error: 'error',
-}
-
-/** The bar's and the percentage's colours for one limit: muted when dimmed, toned otherwise. */
-function colorsFor(view: LimitView): { bar: string; percent?: string } {
-  if (view.isDim) return { bar: 'inactive' }
-
-  const tone = TONE_COLORS[view.tone]
-
-  return { bar: tone ?? 'suggestion', percent: tone }
-}
 
 /** One of the Mac's global preferences, or undefined where it is unset or unreadable. */
 async function readDefault($: EngineInterface, key: string): Promise<string | undefined> {
@@ -110,51 +87,6 @@ export const register: Register = on => {
     const views = viewLimits(shown, { now: drawnAt, isStale: isShownStale, hour12: await read($, hour12) })
     const ageText = isShownStale ? formatAge(shown.takenAt, drawnAt) : undefined
 
-    const { Box, Text } = $.ui.resolve(e)
-
-    const limit = (view: LimitView) => {
-      const filled = filledCells(view.percent)
-      const colors = colorsFor(view)
-
-      return (
-        <Text dimColor={view.isDim}>
-          {view.label}{' '}
-          <Text mono color={colors.bar}>{'━'.repeat(filled)}</Text>
-          <Text mono color="subtle">{'─'.repeat(BAR_WIDTH - filled)}</Text>
-          <Text tabular color={colors.percent}>
-            {' '}
-            {view.percent}%
-          </Text>
-          {view.resetText !== undefined && <Text dimColor> · {view.resetText}</Text>}
-        </Text>
-      )
-    }
-
-    const age = ageText !== undefined && <Text dimColor>{SEPARATOR}{ageText}</Text>
-
-    if (fitsOneRow(views, ageText, e.props.bodyColumns)) {
-      return (
-        <Text wrap="truncate">
-          {views.map((view, index) => (
-            <Text>
-              {index > 0 && <Text dimColor>{SEPARATOR}</Text>}
-              {limit(view)}
-            </Text>
-          ))}
-          {age}
-        </Text>
-      )
-    }
-
-    return (
-      <Box flexDirection="column">
-        {views.map((view, index) => (
-          <Text wrap="truncate">
-            {limit(view)}
-            {index === views.length - 1 && age}
-          </Text>
-        ))}
-      </Box>
-    )
+    return drawBand($.ui.resolve(e), { views, ageText, columns: e.props.bodyColumns })
   })
 }
