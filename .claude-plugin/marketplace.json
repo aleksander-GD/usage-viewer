@@ -1,0 +1,15 @@
+{
+  "name": "usage-viewer",
+  "owner": {
+    "name": "Aleksander Grzegorz Duszkiewicz",
+    "url": "https://github.com/aleksander-GD"
+  },
+  "description": "usage-viewer, a Claude Code mod that keeps your plan limits visible.",
+  "plugins": [
+    {
+      "name": "usage-viewer",
+      "source": "./",
+      "description": "Keeps the Session limit and Weekly limit visible in a sidebar, or a band above the prompt."
+    }
+  ]
+}
