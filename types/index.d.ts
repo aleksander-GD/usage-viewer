@@ -21,6 +21,7 @@ declare module 'claude-code' {
       hour12: boolean
       isSidebarOpen: boolean
       isSidebarDismissed: boolean
+      isBandSlim: boolean
     }
   }
 }
