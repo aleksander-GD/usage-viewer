@@ -39,7 +39,7 @@ describe('Slim band', () => {
       expect(await slim.find({ type: 'Text', text: /Session limit|Weekly · all models/ })).toBeUndefined()
       expect(await slim.find({ type: 'Text', text: /in 3 hr|Wed/ })).toBeUndefined()
       expect(await slim.find({ type: 'Button', key: 'open-sidebar' })).toBeUndefined()
-      expect(await slim.find({ type: 'Button', key: 'toggle-slim' })).toMatchObject({ props: { label: '+' } })
+      expect(await slim.find({ type: 'Button', key: 'toggle-slim' })).toMatchObject({ props: { label: '+', plain: true, dimColor: true } })
       await slim.unmount()
     }
   })
