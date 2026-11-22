@@ -8,6 +8,8 @@ export type Tone = 'normal' | 'warning' | 'error'
 /** One limit as the Limit band draws it. */
 export type LimitView = {
   label: string
+  /** The Slim band's label: "Session", "Weekly". */
+  shortLabel: string
   percent: number
   resetText?: string
   tone: Tone
@@ -15,13 +17,18 @@ export type LimitView = {
 }
 
 /** How each limit is labelled and its reset worded, as in the Usage popover. */
-const KINDS: Record<LimitKind, { label: string; formatReset: (resetsAt: number, now: number, hour12: boolean) => string }> = {
+const KINDS: Record<
+  LimitKind,
+  { label: string; shortLabel: string; formatReset: (resetsAt: number, now: number, hour12: boolean) => string }
+> = {
   five_hour: {
     label: 'Session limit',
+    shortLabel: 'Session',
     formatReset: (resetsAt, now, hour12) => `${formatRelativeReset(resetsAt, now)} (${formatClockTime(resetsAt, hour12)})`,
   },
   seven_day: {
     label: 'Weekly · all models',
+    shortLabel: 'Weekly',
     formatReset: (resetsAt, now, hour12) => formatClockReset(resetsAt, hour12),
   },
 }
@@ -128,17 +135,17 @@ export function viewLimits(
   { now, isStale, hour12 }: { now: number; isStale: boolean; hour12: boolean },
 ): LimitView[] {
   return reading.limits.map(limit => {
-    const { label, formatReset } = KINDS[limit.kind]
+    const { label, shortLabel, formatReset } = KINDS[limit.kind]
     const resetsAt = limit.resetsAt === undefined ? undefined : Date.parse(limit.resetsAt)
 
     if (resetsAt !== undefined && resetsAt <= now) {
-      return { label, percent: 0, tone: 'normal', isDim: true }
+      return { label, shortLabel, percent: 0, tone: 'normal', isDim: true }
     }
 
     const percent = Math.round(limit.percentUsed)
     const resetText = resetsAt === undefined ? undefined : formatReset(resetsAt, now, hour12)
 
-    return { label, percent, resetText, tone: toneFor(percent), isDim: isStale }
+    return { label, shortLabel, percent, resetText, tone: toneFor(percent), isDim: isStale }
   })
 }
 
@@ -158,6 +165,21 @@ export function fitsOneRow(views: LimitView[], ageText: string | undefined, colu
   const age = ageText === undefined ? 0 : SEPARATOR.length + ageText.length
 
   return limits + separators + age <= columns
+}
+
+export const SLIM_SEPARATOR = ' │ '
+
+/** Cells one limit takes in the Slim band: "Session ━───────── 4%". */
+function slimLimitWidth(view: LimitView): number {
+  return `${view.shortLabel} `.length + BAR_WIDTH + ` ${view.percent}%`.length
+}
+
+/** Whether every limit fits on one row of the Slim band. */
+export function fitsSlimRow(views: LimitView[], columns: number): boolean {
+  const limits = views.reduce((sum, view) => sum + slimLimitWidth(view), 0)
+  const separators = Math.max(0, views.length - 1) * SLIM_SEPARATOR.length
+
+  return limits + separators <= columns
 }
 
 /** The Usage sidebar's heading line for one limit: its reset wording, as the Usage popover has it. */

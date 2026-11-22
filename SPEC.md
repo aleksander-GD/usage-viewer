@@ -24,6 +24,19 @@ Model-specific weekly limits are **out of scope** for v1.
 - Each bar is a line 10 cells long, like the Usage popover's: a heavy `━` for the used part and a thin `─` for the rest, so it reads without colour. Any use fills at least one cell; all ten fill only at 100%.
 - Falls back to two rows (one per limit) when the band is too narrow for one.
 
+## Slim band
+
+A shorter look for the Limit band, for when the full one takes too much room:
+
+`Session ━───────── 4% │ Weekly ━━━━────── 38%`
+
+- Short labels (`Session`, `Weekly`), the same 10-cell bars and percentages, no reset text.
+- Keeps the colour thresholds, and still dims a Stale reading or a limit whose reset time has passed, but leaves out the `as of 14 min ago` text.
+- Falls back to two rows, one per limit, when even this doesn't fit on one (about 45 columns plus the button).
+- A button at the right end of the band's first row switches between the two looks: `[ − ]` on the full band, and on the Slim band a plain, dim `+` with no frame, so the band stays as low as a line of text. The full band shows it after **Open sidebar**: `[ Open sidebar ] [ − ]`. The Slim band leaves out **Open sidebar**, so you open the sidebar there with `/usage-viewer` or by switching back to the full band first.
+- The band starts full. The choice is saved, so later Claude Code sessions start with the look you chose last.
+- The Usage sidebar is unchanged.
+
 ## Usage sidebar
 
 Laid out like the Usage popover:
@@ -53,7 +66,7 @@ Where it appears:
 | Desktop app, VS Code, other attached clients | Opens by itself when the client says it docks panes | Shown when the sidebar isn't |
 
 - The Limit band and the Usage sidebar never show at the same time.
-- `/usage-viewer` opens the sidebar on any surface, and so does the band's **Open sidebar** button at the right end of its first row. A mod cannot add an icon to the desktop app's own toolbar, so the button is the one-click way back.
+- `/usage-viewer` opens the sidebar on any surface, and so does the full band's **Open sidebar** button at the right end of its first row, just before `[ − ]` (the Slim band leaves it out). A mod cannot add an icon to the desktop app's own toolbar, so the button is the one-click way back.
 - Closing the sidebar keeps it closed for that Claude Code session until `/usage-viewer` is run again.
 
 ## Colour thresholds
@@ -83,6 +96,7 @@ No notifications.
 | A limit's reset time has passed with no fresher Reading | That limit shows dimmed 0% with no reset text |
 | No Reading has ever been saved (e.g. not on a subscription) | Band shows nothing |
 | A survey is showing | Band steps aside, then returns when the survey is dismissed |
+| Slim band chosen | Short labels, bars and percentages only; a Stale reading is dimmed without its age |
 
 The band is visible while Claude is working.
 
@@ -104,6 +118,7 @@ Unit tests run with `claude plugin test` and cover:
 - colour thresholds at 75% and 90%
 - the reset-passed rule
 - the Stale reading age text
+- the Slim band: switching both ways, the saved choice, the dropped age text and its one- and two-row layouts
 
 The drawn band is checked by eye in the desktop app.
 

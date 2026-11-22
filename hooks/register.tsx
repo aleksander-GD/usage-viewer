@@ -15,8 +15,11 @@ const hour12 = atom({ plugin: 'usage-viewer', key: 'hour12' } as const, true)
 const isSidebarOpen = atom({ plugin: 'usage-viewer', key: 'isSidebarOpen' } as const, false)
 // Closed by the person: stays closed until they run the command, never reopened unasked.
 const isSidebarDismissed = atom({ plugin: 'usage-viewer', key: 'isSidebarDismissed' } as const, false)
+// The person's choice of the Slim band, saved so later Claude Code sessions start with it.
+const isBandSlim = atom({ plugin: 'usage-viewer', key: 'isBandSlim' } as const, false)
 
 const STORE_KEY = 'lastReading'
+const SLIM_STORE_KEY = 'isBandSlim'
 const TICK_MS = MINUTE
 const SIDEBAR = 'usage'
 const SIDEBAR_TITLE = 'Usage'
@@ -87,6 +90,12 @@ async function isSidebarShown($: EngineInterface): Promise<boolean> {
   return (await $.ui.panes()).some(pane => pane.id === SIDEBAR && pane.isPlaced && pane.isShown)
 }
 
+/** Switches the band between full and slim, and saves the choice for later Claude Code sessions. */
+async function toggleBandSlim($: EngineInterface) {
+  const isSlim = await update($, isBandSlim, was => !was)
+  await $.store.set(SLIM_STORE_KEY, isSlim)
+}
+
 async function keep($: EngineInterface, fresh: Reading) {
   await update($, reading, () => fresh)
   await update($, isStale, () => false)
@@ -100,6 +109,9 @@ export const register: Register = on => {
 
     const isHour12 = await readHour12($)
     await update($, hour12, () => isHour12)
+
+    const savedSlim = (await $.store.get(SLIM_STORE_KEY)) === true
+    await update($, isBandSlim, () => savedSlim)
 
     const saved = ((await $.store.get(STORE_KEY)) as Reading | undefined) ?? null
     const previous = (await read($, reading)) ?? saved
@@ -177,7 +189,9 @@ export const register: Register = on => {
       views,
       ageText,
       columns: e.props.bodyColumns,
+      isSlim: await read($, isBandSlim),
       openSidebar: () => void openSidebarAsked($),
+      toggleSlim: () => void toggleBandSlim($),
     })
   })
 }

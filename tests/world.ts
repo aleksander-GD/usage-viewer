@@ -29,6 +29,7 @@ export function engineBeneath(
   on: On,
   {
     saved,
+    isBandSlim,
     current = [],
     macDefaults = {},
     surfaces = [],
@@ -36,6 +37,7 @@ export function engineBeneath(
     panes = [],
   }: {
     saved?: unknown
+    isBandSlim?: boolean
     current?: SessionRateLimit[]
     macDefaults?: Record<string, string>
     surfaces?: RenderSurface[]
@@ -63,7 +65,25 @@ export function engineBeneath(
 
     return { value: value === undefined ? { ...ran, exitCode: 1, stdout: '' } : { ...ran, exitCode: 0, stdout: `${value}\n` } }
   })
-  mock.store(on, saved === undefined ? {} : { lastReading: saved })
+  // The mod's store in memory; `written` holds what the mod saved this test.
+  const stored = new Map<string, unknown>([
+    ...(saved === undefined ? [] : [['lastReading', saved] as const]),
+    ...(isBandSlim === undefined ? [] : [['isBandSlim', isBandSlim] as const]),
+  ])
+  const written: Record<string, unknown> = {}
+  on('store.get', ($, e) => ({ value: stored.get(e.key) }))
+  on('store.set', ($, e) => {
+    stored.set(e.key, e.value)
+    written[e.key] = e.value
+
+    return { value: undefined }
+  })
+  on('store.delete', ($, e) => {
+    stored.delete(e.key)
+
+    return { value: undefined }
+  })
+  on('store.keys', () => ({ value: [...stored.keys()] }))
   on('session.usage', () => ({ value: { startedAt: NOW, context: CONTEXT, rateLimits: current } }))
   // Stands for what the app draws in the band when the mod steps aside.
   on('ui.render', { component: 'AbovePrompt' }, ($, e) => {
@@ -74,7 +94,7 @@ export function engineBeneath(
   on('session.start', () => ({ cwd: '/tmp' }))
   on('session.measure', ($, e) => ({ changed: e.changed }))
 
-  return { clock, opened }
+  return { clock, opened, written }
 }
 
 export const START = { cwd: '/tmp', surface: 'desktop' as const, isInteractive: true }
