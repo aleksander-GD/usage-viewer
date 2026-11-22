@@ -2,7 +2,7 @@
 
 A personal Claude Code mod that keeps **Limit usage** visible, in a **Usage sidebar** beside the transcript where the surface can dock one and in a **Limit band** above the input field everywhere else, so the **Usage popover** never needs opening. Terms are defined in [GLOSSARY.md](GLOSSARY.md).
 
-Audience: just the author, on their own Mac. Not distributed as a plugin.
+Audience: mainly the author, on their own Mac. Others can install it from this repository's marketplace.
 
 ## What it shows
 
@@ -127,3 +127,4 @@ The drawn band is checked by eye in the desktop app.
 1. The source lives in this folder (`usage-viewer-mod`). The mod is named `usage-viewer`.
 2. While iterating, it is loaded via the Claude Code session's hot-reload folder. The user answers the one-time "Enable hot reloading" prompt.
 3. Once it works, `CLAUDE_CODE_PLUGIN_DIRS` pointing at this folder is added to the `env` block of `~/.claude/settings.json`. This only happens after the user explicitly approves the exact line.
+4. Releases are tagged on `main` and published under GitHub Releases. `.claude-plugin/marketplace.json` makes the repository a marketplace, so the released mod installs with `/plugin install usage-viewer --marketplace aleksander-GD/usage-viewer`. A working copy is run with `--plugin-dir` or `CLAUDE_CODE_PLUGIN_DIRS` instead, never together with the installed one.

@@ -18,9 +18,37 @@ Where the surface can dock a pane beside the transcript (the terminal in fullscr
 
 See [SPEC.md](SPEC.md) for the full behaviour and [GLOSSARY.md](GLOSSARY.md) for the terms.
 
-## Install (every Claude Code session)
+## Install
 
-Add this folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/settings.json`, then start a new Claude Code session:
+The mod installs from this repository's marketplace, which follows `main`, the released version.
+
+At the prompt of a terminal Claude Code session:
+
+```text
+/plugin install usage-viewer --marketplace aleksander-GD/usage-viewer
+```
+
+Answer `y` to add the marketplace, then pick a scope.
+
+From a shell:
+
+```bash
+claude plugin install usage-viewer --marketplace aleksander-GD/usage-viewer
+```
+
+In the desktop app, where `/plugin` doesn't run: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `aleksander-GD/usage-viewer`, then **Add plugin**.
+
+To get a new release: `claude plugin update usage-viewer`, then `/reload-plugins`.
+
+## Develop
+
+Run the mod from your working copy instead of the installed release, so edits hot-reload. For one terminal Claude Code session:
+
+```bash
+claude --plugin-dir /path/to/usage-viewer
+```
+
+For every Claude Code session, including the desktop app's, add the folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/settings.json`, then start a new Claude Code session:
 
 ```json
 {
@@ -30,9 +58,8 @@ Add this folder to `CLAUDE_CODE_PLUGIN_DIRS` in the `env` block of `~/.claude/se
 }
 ```
 
-For one terminal Claude Code session only: `claude --plugin-dir /path/to/usage-viewer`.
+That runs whatever branch is checked out. Use either this or the marketplace install, not both, so only one copy of the mod loads.
 
-## Develop
 
 ```bash
 claude plugin validate .
