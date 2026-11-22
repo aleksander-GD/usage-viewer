@@ -32,6 +32,10 @@ _Avoid_: Cached data, old value
 The strip above the input field where this mod shows Limit usage while the Usage sidebar is not shown.
 _Avoid_: Status bar, banner, widget
 
+**Slim band**:
+The Limit band's shorter look: short labels, bars and percentages only, chosen with the band's `−` button and kept across Claude Code sessions.
+_Avoid_: Compact mode, minimised band, collapsed view
+
 **Usage sidebar**:
 The pane beside the transcript where this mod shows Limit usage laid out like the Usage popover.
 _Avoid_: Panel, side bar, pane (on its own)
