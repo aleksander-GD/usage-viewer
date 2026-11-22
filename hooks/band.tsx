@@ -7,13 +7,13 @@ import type { LimitView } from './limits'
 const OPEN_SIDEBAR_LABEL = 'Open sidebar'
 const SLIM_LABEL = '−'
 const FULL_LABEL = '+'
-// The terminal draws a Button as "[ label ]": four cells around its label.
-const buttonColumns = (label: string) => label.length + 4
+type BandButton = { key: string; label: string; onPress: () => void; isPlain?: boolean }
+
+// The terminal draws a Button as "[ label ]", four cells around its label; a plain one as the label alone.
+const buttonColumns = (button: BandButton) => button.label.length + (button.isPlain ? 0 : 4)
 // One cell between the buttons, two more keep them clear of the limits.
 const BUTTON_GAP = 1
 const BUTTONS_MARGIN = 2
-
-type BandButton = { key: string; label: string; onPress: () => void }
 
 /**
  * The Limit band: one row with every limit, or one row per limit when that
@@ -67,13 +67,14 @@ export function drawBand<P extends RenderSurface>(
     buttons.push({ key: 'open-sidebar', label: OPEN_SIDEBAR_LABEL, onPress: openSidebar })
   }
   if (toggleSlim !== undefined) {
-    buttons.push({ key: 'toggle-slim', label: isSlim ? FULL_LABEL : SLIM_LABEL, onPress: toggleSlim })
+    // On the Slim band a plain, dim glyph keeps the band as low as a line of text.
+    buttons.push({ key: 'toggle-slim', label: isSlim ? FULL_LABEL : SLIM_LABEL, onPress: toggleSlim, isPlain: isSlim })
   }
 
   const buttonsWidth =
     buttons.length === 0
       ? 0
-      : buttons.reduce((sum, button) => sum + buttonColumns(button.label), 0) +
+      : buttons.reduce((sum, button) => sum + buttonColumns(button), 0) +
         (buttons.length - 1) * BUTTON_GAP +
         BUTTONS_MARGIN
   const room = columns - buttonsWidth
@@ -87,7 +88,11 @@ export function drawBand<P extends RenderSurface>(
         {row}
         <Box flexDirection="row" gap={BUTTON_GAP}>
           {buttons.map(button => (
-            <Button key={button.key} label={button.label} onPress={button.onPress} />
+            button.isPlain === true ? (
+              <Button key={button.key} label={button.label} onPress={button.onPress} plain dimColor />
+            ) : (
+              <Button key={button.key} label={button.label} onPress={button.onPress} />
+            )
           ))}
         </Box>
       </Box>
