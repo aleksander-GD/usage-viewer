@@ -1,7 +1,7 @@
 {
   "name": "usage-viewer",
   "version": "0.2.0",
-  "author": { "name": "aleksander-GD" },
+  "author": { "name": "Aleksander Grzegorz Duszkiewicz", "url": "https://github.com/aleksander-GD" },
   "description": "Keeps the Session limit and Weekly limit visible in a sidebar, or a band above the prompt.",
   "types": "./types/index.d.ts"
 }

@@ -1,7 +1,8 @@
 {
   "name": "usage-viewer",
   "owner": {
-    "name": "aleksander-GD"
+    "name": "Aleksander Grzegorz Duszkiewicz",
+    "url": "https://github.com/aleksander-GD"
   },
   "description": "usage-viewer, a Claude Code mod that keeps your plan limits visible.",
   "plugins": [
