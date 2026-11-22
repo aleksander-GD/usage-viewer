@@ -33,7 +33,7 @@ A shorter look for the Limit band, for when the full one takes too much room:
 - Short labels (`Session`, `Weekly`), the same 10-cell bars and percentages, no reset text.
 - Keeps the colour thresholds, and still dims a Stale reading or a limit whose reset time has passed, but leaves out the `as of 14 min ago` text.
 - Falls back to two rows, one per limit, when even this doesn't fit on one (about 45 columns plus the button).
-- A button at the right end of the band's first row switches between the two looks: `[ − ]` on the full band, `[ + ]` on the Slim band. The full band shows it after **Open sidebar**: `[ Open sidebar ] [ − ]`. The Slim band leaves out **Open sidebar**, so you open the sidebar there with `/usage-viewer` or by switching back to the full band first.
+- A button at the right end of the band's first row switches between the two looks: `[ − ]` on the full band, and on the Slim band a plain, dim `+` with no frame, so the band stays as low as a line of text. The full band shows it after **Open sidebar**: `[ Open sidebar ] [ − ]`. The Slim band leaves out **Open sidebar**, so you open the sidebar there with `/usage-viewer` or by switching back to the full band first.
 - The band starts full. The choice is saved, so later Claude Code sessions start with the look you chose last.
 - The Usage sidebar is unchanged.
 
