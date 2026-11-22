@@ -19,6 +19,9 @@ declare module 'claude-code' {
       isStale: boolean
       now: number
       hour12: boolean
+      isSidebarOpen: boolean
+      isSidebarDismissed: boolean
+      isBandSlim: boolean
     }
   }
 }
