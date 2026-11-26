@@ -67,6 +67,7 @@ Where it appears:
 
 - The Limit band and the Usage sidebar never show at the same time.
 - `/usage-viewer` opens the sidebar on any surface, and so does the full band's **Open sidebar** button at the right end of its first row, just before `[ − ]` (the Slim band leaves it out). A mod cannot add an icon to the desktop app's own toolbar, so the button is the one-click way back.
+- A plain, dim **Close** button at the right end of the sidebar's `Usage` heading closes it, and the Limit band returns. The desktop app's own close mark on the pane's tab does not reach a mod, so this button is the way back to the band there. A minimized pane (a widget on the desktop app) has no button, as clicks may not reach it.
 - Closing the sidebar keeps it closed for that Claude Code session until `/usage-viewer` is run again.
 
 ## Colour thresholds
