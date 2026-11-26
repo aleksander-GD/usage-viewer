@@ -74,6 +74,13 @@ async function openSidebarAsked($: EngineInterface) {
   return opened
 }
 
+/** Closes the Usage sidebar because the person pressed its Close button: it stays closed, and the band returns. */
+async function closeSidebarAsked($: EngineInterface) {
+  await update($, isSidebarDismissed, () => true)
+  await update($, isSidebarOpen, () => false)
+  await $.ui.close({ id: SIDEBAR })
+}
+
 /** Registers the command and opens the Usage sidebar where a surface docks it beside the transcript. */
 async function setUpSidebar($: EngineInterface) {
   await $.command.register({ name: COMMAND, description: 'Show plan usage limits in a sidebar' })
@@ -166,14 +173,16 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: SIDEBAR }, async ($, e) => {
     const shown = await read($, reading)
     const ui = $.ui.resolve(e)
-    if (shown === null) return drawSidebarEmpty(ui)
+    // A widget may not take clicks, so it gets no button.
+    const close = e.props.placement === 'widget' ? undefined : () => void closeSidebarAsked($)
+    if (shown === null) return drawSidebarEmpty(ui, { close })
 
     const isShownStale = await read($, isStale)
     const drawnAt = (await read($, now)) || shown.takenAt
     const views = viewLimits(shown, { now: drawnAt, isStale: isShownStale, hour12: await read($, hour12) })
     const ageText = isShownStale ? formatAge(shown.takenAt, drawnAt) : undefined
 
-    return drawSidebar(ui, { views, ageText, columns: e.props.bodyColumns })
+    return drawSidebar(ui, { views, ageText, columns: e.props.bodyColumns, close })
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {

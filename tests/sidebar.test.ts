@@ -96,6 +96,46 @@ describe('Usage sidebar', () => {
     await ui.unmount()
   })
 
+  test('its Close button closes it, brings the band back and keeps it closed', async ($, on) => {
+    const { opened } = engineBeneath(on, { current: LIMITS, panes: SHOWN })
+    const closed: string[] = []
+    on('ui.close', ($, e) => {
+      closed.push(e.id)
+
+      return { value: undefined }
+    })
+    await $.session.start(START)
+    await $.session.attach({ surface: 'desktop', clientId: 'app', viewport: { columns: 160, rows: 50, isFullscreen: true } })
+    expect(opened).toEqual(['usage'])
+
+    const pane = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'Pane', requestId: 'usage', props: paneProps() })
+    await pane.press({ key: 'close-sidebar' })
+    expect(closed).toEqual(['usage'])
+    await pane.unmount()
+
+    const band = await $.ui.mount({ plugin: 'usage-viewer', surface: 'desktop', component: 'AbovePrompt', props: props() })
+    expect(await band.find({ type: 'Text', text: /Session limit/ })).toBeDefined()
+    await band.unmount()
+
+    await $.session.attach({ surface: 'desktop', clientId: 'app', viewport: { columns: 160, rows: 50, isFullscreen: true } })
+    expect(opened).toEqual(['usage'])
+  })
+
+  test('a widget has no Close button, as it may not take clicks', async ($, on) => {
+    engineBeneath(on, { current: LIMITS })
+    await $.session.start(START)
+
+    const ui = await $.ui.mount({
+      plugin: 'usage-viewer',
+      surface: 'desktop',
+      component: 'Pane',
+      requestId: 'usage',
+      props: { ...paneProps(), placement: 'widget' as const },
+    })
+    expect(await ui.find({ type: 'Button', key: 'close-sidebar' })).toBeUndefined()
+    await ui.unmount()
+  })
+
   test("the band's button brings the sidebar back", async ($, on) => {
     const { opened } = engineBeneath(on, { current: LIMITS, surfaces: ['terminal'] })
     await $.session.start(START)
